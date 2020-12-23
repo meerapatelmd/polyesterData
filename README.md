@@ -25,8 +25,13 @@ devtools("meerapatelmd/polyesterData")
 
 ## Load Data
 
+Loading the Drug Exposure Table as an example:
+
 ``` r
 library(polyesterData)  
+```
+
+``` r
 head(DRUG_EXPOSURE)
 #>   drug_exposure_id person_id drug_concept_id drug_exposure_start_date
 #> 1            20401       267        40213154               2002-06-15
@@ -71,3 +76,20 @@ head(DRUG_EXPOSURE)
 #> 5                 NA                     NA
 #> 6                 NA                     NA
 ```
+
+## Statistics
+
+    #> # A tibble: 162 x 7
+    #>    Table      Variable    COUNT DISTINCT_COUNT NA_COUNT NA_STR_COUNT BLANK_COUNT
+    #>    <chr>      <chr>       <int>          <int>    <int>        <int>       <int>
+    #>  1 ALL_VISITS encounter… 284857         284857        0            0           0
+    #>  2 ALL_VISITS encounter… 284857              5        0            0           0
+    #>  3 ALL_VISITS patient    284857           6039        0            0           0
+    #>  4 ALL_VISITS visit_end… 284857          25547        0            0           0
+    #>  5 ALL_VISITS visit_occ… 284857         284857        0            0           0
+    #>  6 ALL_VISITS visit_sta… 284857          25506        0            0           0
+    #>  7 ASSIGN_AL… date_serv… 327867          25514        0            0           0
+    #>  8 ASSIGN_AL… date_serv… 327867          25555        0            0           0
+    #>  9 ASSIGN_AL… encounter… 327867         288129        0            0           0
+    #> 10 ASSIGN_AL… encounter… 327867              6        0            0           0
+    #> # … with 152 more rows
