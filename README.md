@@ -244,3 +244,10 @@ head(DRUG_EXPOSURE)
     #> 160 PROCEDURE_OCCURRENCE quantity                       163597              1
     #> 161 PROCEDURE_OCCURRENCE visit_detail_id                163597              1
     #> 162 PROCEDURE_OCCURRENCE visit_occurrence_id            163597          97214
+
+## Code of Conduct
+
+Please note that the polyesterData project is released with a
+[Contributor Code of
+Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.
