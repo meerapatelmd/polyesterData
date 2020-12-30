@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{pdfpages}
+%\VignetteIndexEntry{Condition Occurrence Concept Distribution}
+%\VignettePackage{polyesterData}
+%\VignetteEncoding{UTF-8}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\includepdf[pages=-, fitpaper=true]{condition_occurrence_concept-distribution.pdf}
+\end{document}

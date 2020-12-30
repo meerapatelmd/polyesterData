@@ -1,0 +1,117 @@
+---
+title: "Condition Occurrence Concept Distribution"
+author: "Meera Y. Patel, M.D."
+date: "`r Sys.Date()`"
+header-includes:
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+output:
+  pdf_document:
+    fig_height: 8
+    fig_width: 10
+    highlight: kate
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(comment = "#>",
+                      echo = TRUE,
+                      eval = TRUE,
+                      cache = TRUE,
+                      #cache.path = "reports/cache/",
+                      child = NULL, #file/s to knit and then include,
+                      collapse = FALSE, #collapse all output into a single block,
+                      error = FALSE, #display error messages in doc. FALSE stops render when error is thrown
+                      fig.align = "center", #left, right, center, or default
+                      include = TRUE, #include chunk?
+                      message = FALSE, #display code messages?
+                      tidy = TRUE, #tidy code 
+                      warning = TRUE, #include warnings?
+                      results = "hide"
+                        # "asis": passthrough results
+                        # "hide": do not display results 
+                        # "hold": put all results below all code
+                      )
+```
+
+```{r libraries}
+library(polyesterData)
+library(ggplot2)
+library(pg13)
+```
+
+
+```{r,include=FALSE,results='hide'}
+conn <- pg13::local_connect("athena")
+```
+
+
+This vignette is profiling the frequency of drugs in the `Drug Exposures` Table based on RxNorm Ingredient and ATC Class.  The `Drug Exposures` table is joined to the `Concept Ancestor` and `Concept` tables to derive the RxNorm Ingredients as well as the ATC 2nd Concept Class that the drug records belong to.  
+
+```{r,results='hide',warning=FALSE}
+staging_table <-
+  pg13::write_staging_table(conn = conn, 
+                            schema = "patelm9",
+                            drop_on_exit = FALSE,
+                            data = CONDITION_OCCURRENCE)
+
+output <-
+  pg13::query(conn = conn, 
+              sql_statement = 
+                SqlRender::render(
+              "
+              SELECT c.concept_name AS condition 
+              FROM patelm9.@staging_table con 
+              LEFT JOIN omop_vocabulary.concept c 
+              ON con.condition_concept_id = c.concept_id
+              ;",
+              staging_table = staging_table))
+
+pg13::drop_all_staging_tables(conn = conn,
+                              schema = "patelm9")
+```
+
+```{r,include=FALSE}
+output2 <-
+  output %>%
+    dplyr::count(condition) %>%
+    dplyr::rename(concept_count = n)
+output2
+```
+
+\newpage
+\blandscape
+
+```{r,echo=FALSE}
+output2 %>%
+  ggplot2::ggplot(aes(x = condition, 
+                      y = concept_count,
+                      fill = condition)) +
+    ggplot2::geom_col() +
+    ggplot2::guides(fill = "none") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(axis.ticks = element_blank()) +
+    ggplot2::labs(title = "Condition Record Frequencies",
+                  x = "Condition",
+                  y = "Count") +
+  ggplot2::theme(axis.text.x  = element_text(angle=90, hjust=1.1, size=3),
+                 legend.position = "bottom",
+                 legend.direction = "horizontal",
+                 legend.spacing = unit(0.1, "cm"),
+                 legend.text = element_text(size = 3),
+                 legend.key.size = unit(1.5, "pt"),
+                 legend.margin = margin(0.0, 0.0, 0.0, 0.0, "cm"),
+                 legend.box.margin = margin(0, 0, 0, 0, "cm"),
+                 legend.justification = "left",
+                 legend.title = element_blank()) + 
+  scale_y_continuous(
+  expand = expansion(mult = c(0,0.05))
+)
+```
+
+\elandscape
+
+```{r,include=FALSE,results='hide'}
+pg13::dc(conn = conn)
+```
+
