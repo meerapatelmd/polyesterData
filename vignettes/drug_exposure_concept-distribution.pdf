@@ -2,11 +2,7 @@
 title: "Drug Exposure Concept Distribution"
 author: "Meera Y. Patel, M.D."
 date: "`r Sys.Date()`"
-output: 
-  pdf_document: 
-    fig_height: 8
-    fig_width: 10
-    highlight: kate
+output: pdf_document
 ---
 
 ```{r setup, include = FALSE}
