@@ -13,7 +13,9 @@ status](https://www.r-pkg.org/badges/version/polyesterData)](https://CRAN.R-proj
 
 polyesterData is a package that loads a simulated OMOP CDM dataset of
 approximately 6039 patients originally sourced from Synthetic Health’s
-Synthea.
+Synthea using the [polyester2 R
+package](https://meerapatelmd.github.io/polyester2/). The csvs can also
+be direcly accessed in the `data-raw` subdirectory for non-R users.
 
 ## Installation
 
