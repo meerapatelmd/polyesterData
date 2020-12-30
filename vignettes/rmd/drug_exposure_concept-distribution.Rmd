@@ -1,0 +1,130 @@
+---
+title: "Drug Exposure Concept Distribution"
+author: "Meera Y. Patel, M.D."
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(comment = "#>",
+                      echo = TRUE,
+                      eval = TRUE,
+                      cache = TRUE,
+                      #cache.path = "reports/cache/",
+                      child = NULL, #file/s to knit and then include,
+                      collapse = FALSE, #collapse all output into a single block,
+                      error = TRUE, #display error messages in doc. FALSE stops render when error is thrown
+                      fig.align = "center", #left, right, center, or default
+                      include = TRUE, #include chunk?
+                      message = FALSE, #display code messages?
+                      tidy = TRUE, #tidy code 
+                      warning = TRUE, #include warnings?
+                      results = "hide"
+                        # "asis": passthrough results
+                        # "hide": do not display results 
+                        # "hold": put all results below all code
+                      )
+```
+
+```{r libraries}
+library(polyesterData)
+library(ggplot2)
+```
+
+
+```{r}
+conn <- pg13::local_connect("athena")
+```
+
+```{r}
+staging_table <-
+  pg13::write_staging_table(conn = conn, 
+                            schema = "patelm9",
+                            data = DRUG_EXPOSURE)
+
+class_output <-
+  pg13::query(conn = conn, 
+              sql_statement = 
+                SqlRender::render(
+              "
+              SELECT de.drug_concept_id, c2.* 
+              FROM patelm9.@staging_table de 
+              LEFT JOIN omop_vocabulary.concept c 
+              ON de.drug_concept_id = c.concept_id
+              INNER JOIN omop_vocabulary.concept_ancestor ca 
+              ON ca.descendant_concept_id = c.concept_id 
+              INNER JOIN omop_vocabulary.concept c2 
+              ON c2.concept_id = ca.ancestor_concept_id 
+              WHERE c2.concept_class_id = 'ATC 2nd'
+              ;",
+              staging_table = staging_table))
+
+
+ingredient_output <-
+  pg13::query(conn = conn, 
+              sql_statement = 
+                SqlRender::render(
+              "
+              SELECT DISTINCT de.drug_concept_id, c2.concept_name AS ingredient
+              FROM patelm9.@staging_table de 
+              LEFT JOIN omop_vocabulary.concept c 
+              ON de.drug_concept_id = c.concept_id
+              INNER JOIN omop_vocabulary.concept_ancestor ca
+              ON ca.descendant_concept_id = c.concept_id 
+              INNER JOIN omop_vocabulary.concept c2 
+              ON c2.concept_id = ca.ancestor_concept_id
+              WHERE c2.concept_class_id = 'Ingredient'
+              ;",
+              staging_table = staging_table))
+
+output <-
+  class_output %>%
+  dplyr::left_join(ingredient_output) 
+
+pg13::drop_all_staging_tables(conn = conn,
+                              schema = "patelm9")
+```
+
+```{r}
+output2 <-
+  output %>%
+    dplyr::group_by(ingredient) %>%
+    dplyr::mutate(drug_class = paste(unique(concept_name), collapse = "|")) %>%
+    dplyr::ungroup() %>%
+    dplyr::count(drug_class, ingredient) %>%
+    dplyr::rename(concept_count = n) %>%
+    dplyr::mutate(ingredient = forcats::fct_reorder(ingredient, drug_class))
+output2
+```
+
+```{r,results='markup'}
+output2 %>%
+  ggplot2::ggplot(aes(x = ingredient, 
+                      y = concept_count,
+                      fill = drug_class)) +
+    ggplot2::geom_col() +
+    ggplot2::guides(fill = "none") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(axis.ticks = element_blank()) +
+    ggplot2::labs(title = "Drug Ingredient Record Frequencies by Class",
+                  x = "Drug Ingredient",
+                  y = "Drug Ingredient Count") +
+  ggplot2::theme(axis.text.x  = element_text(angle=90, hjust=1, size=4))
+```
+
+
+```{r, results='markup'}
+output2 <-
+  output %>%
+  dplyr::group_by(person_id) %>%
+  dplyr::arrange(Concept, .by_group = TRUE) %>%
+  dplyr::summarise(Drug_Combination = paste(unique(Concept), collapse = ", ")) %>%
+  dplyr::count(Drug_Combination) %>%
+  dplyr::arrange(desc(n))
+output2
+```
+
+```{r,results='hide'}
+pg13::dc(conn = conn)
+```
+
