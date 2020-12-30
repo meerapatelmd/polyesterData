@@ -1,5 +1,5 @@
 Package: polyesterData
-Title: What the Package Does (One Line, Title Case)
+Title: Load a Simulated OMOP CDM Database
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Meera",
@@ -7,24 +7,27 @@ Authors@R:
            role = c("aut", "cre"),
            email = "patelmeeray@gmail.com",
            comment = c(ORCID = "0000-0002-3401-3948"))
-Description: What the package does (one paragraph).
+Description: Simulated OMOP CDM dataset of approximately 6039
+    patients originally sourced from Synthetic Health’s Synthea using the
+    polyester2 R package.
 License: MIT + file LICENSE
+URL: https://github.com/meerapatelmd/polyesterData
+BugReports: https://github.com/meerapatelmd/polyesterData/issues
+Depends: 
+    R (>= 2.10)
+Imports: 
+    magrittr,
+    rlang (>= 0.1.2),
+    tibble
 Suggests: 
-    testthat (>= 3.0.0),
-    roxygen2,
     knitr,
-    rmarkdown
+    rmarkdown,
+    roxygen2,
+    testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-URL: https://github.com/meerapatelmd/polyesterData
-BugReports: https://github.com/meerapatelmd/polyesterData/issues
-Imports: 
-    magrittr,
-    tibble,
-    rlang (>= 0.1.2)
-Depends: 
-    R (>= 2.10)
-VignetteBuilder: knitr
