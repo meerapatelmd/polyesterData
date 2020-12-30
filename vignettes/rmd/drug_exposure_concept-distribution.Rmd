@@ -2,8 +2,12 @@
 title: "Drug Exposure Concept Distribution"
 author: "Meera Y. Patel, M.D."
 date: "`r Sys.Date()`"
-output: 
-  pdf_document: 
+header-includes:
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+output:
+  pdf_document:
     fig_height: 8
     fig_width: 10
     highlight: kate
@@ -17,7 +21,7 @@ knitr::opts_chunk$set(comment = "#>",
                       #cache.path = "reports/cache/",
                       child = NULL, #file/s to knit and then include,
                       collapse = FALSE, #collapse all output into a single block,
-                      error = TRUE, #display error messages in doc. FALSE stops render when error is thrown
+                      error = FALSE, #display error messages in doc. FALSE stops render when error is thrown
                       fig.align = "center", #left, right, center, or default
                       include = TRUE, #include chunk?
                       message = FALSE, #display code messages?
@@ -33,20 +37,23 @@ knitr::opts_chunk$set(comment = "#>",
 ```{r libraries}
 library(polyesterData)
 library(ggplot2)
+library(pg13)
 ```
 
-This vignette is profiling the frequency of drugs in the `Drug Exposures` Table based on RxNorm Ingredient and the 2nd-order ATC Class (_ATC 2nd_).  
 
-```{r}
+```{r,include=FALSE,results='hide'}
 conn <- pg13::local_connect("athena")
 ```
 
-The `Drug Exposures` table is joined to the `Concept Ancestor` and `Concept` tables to derive the RxNorm Ingredients as well as the ATC 2nd Concept Class that the drug records belong to.  
+
+This vignette is profiling the frequency of drugs in the `Drug Exposures` Table based on RxNorm Ingredient and ATC Class.  The `Drug Exposures` table is joined to the `Concept Ancestor` and `Concept` tables to derive the RxNorm Ingredients as well as the ATC 2nd Concept Class that the drug records belong to.  
 
 ```{r,results='hide',warning=FALSE}
 staging_table <-
   pg13::write_staging_table(conn = conn, 
                             schema = "patelm9",
+                            drop_existing = FALSE,
+                            drop_on_exit = FALSE,
                             data = DRUG_EXPOSURE)
 
 class_output <-
@@ -92,9 +99,7 @@ pg13::drop_all_staging_tables(conn = conn,
                               schema = "patelm9")
 ```
 
-Since an RxNorm Ingredient may belong to 1 or more class, to reduce noise in the plot, they are aggregated to a single Drug Class. 
-
-```{r}
+```{r,include=FALSE}
 output2 <-
   output %>%
     dplyr::group_by(ingredient) %>%
@@ -106,9 +111,10 @@ output2 <-
 output2
 ```
 
-The resulting plot of the distribution of drugs in the synthetic dataset at the RxNorm Ingredient and ATC 2nd Class axis. 
+\newpage
+\blandscape
 
-```{r,results='markup'}
+```{r,echo=FALSE}
 output2 %>%
   ggplot2::ggplot(aes(x = ingredient, 
                       y = concept_count,
@@ -135,8 +141,9 @@ output2 %>%
 )
 ```
 
+\elandscape
 
-```{r,results='hide'}
+```{r,include=FALSE,results='hide'}
 pg13::dc(conn = conn)
 ```
 
