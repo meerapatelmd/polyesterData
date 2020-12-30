@@ -1,0 +1,89 @@
+---
+title: "Concept Distribution"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Concept Distribution}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(polyesterData)
+library(ggplot2)
+```
+
+
+```{r}
+conn <- pg13::local_connect("polyester")
+```
+
+```{r}
+output <-
+pg13::query(conn = conn, 
+            sql_statement = 
+            "
+            SELECT c2.* 
+            FROM omop_cdm.drug_exposure de 
+            LEFT JOIN omop_cdm.concept c 
+            ON de.drug_concept_id = c.concept_id
+            INNER JOIN omop_cdm.concept_ancestor ca 
+            ON ca.descendant_concept_id = c.concept_id 
+            INNER JOIN omop_cdm.concept c2 
+            ON c2.concept_id = ca.ancestor_concept_id 
+            WHERE c2.concept_class_id = 'ATC 4th'
+            ;") %>%
+  dplyr::mutate_if(is.character, ~ dplyr::na_if(., "")) %>%
+  chariot::merge_strip(into = "Concept") %>%
+  dplyr::count(Concept)
+```
+
+```{r}
+ggplot2::ggplot(output,
+                aes(x = reorder(Concept, -n), 
+                    y = n,
+                    fill = Concept)) +
+ggplot2::geom_col() +
+ggplot2::guides(fill = "none") +
+ggplot2::theme_minimal()
+```
+
+```{r}
+output <-
+pg13::query(conn = conn, 
+            sql_statement = 
+            "
+            SELECT de.person_id, c2.* 
+            FROM omop_cdm.drug_exposure de 
+            LEFT JOIN omop_cdm.concept c 
+            ON de.drug_concept_id = c.concept_id
+            INNER JOIN omop_cdm.concept_ancestor ca 
+            ON ca.descendant_concept_id = c.concept_id 
+            INNER JOIN omop_cdm.concept c2 
+            ON c2.concept_id = ca.ancestor_concept_id 
+            WHERE c2.concept_class_id = 'ATC 4th'
+            ;") %>%
+  dplyr::mutate_if(is.character, ~ dplyr::na_if(., "")) %>%
+  chariot::merge_strip(into = "Concept")
+```
+
+```{r}
+output2 <-
+  output %>%
+  dplyr::group_by(person_id) %>%
+  dplyr::arrange(Concept, .by_group = TRUE) %>%
+  dplyr::summarise(Drug_Combination = paste(unique(Concept), collapse = ", ")) %>%
+  dplyr::count(Drug_Combination) %>%
+  dplyr::arrange(desc(n))
+```
+
+```{r}
+pg13::dc(conn = conn)
+```
+
