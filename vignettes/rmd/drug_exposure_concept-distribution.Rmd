@@ -41,14 +41,14 @@ library(pg13)
 ```
 
 
-```{r,include=FALSE,results='hide'}
+```{r connection,include=FALSE,results='hide'}
 conn <- pg13::local_connect("athena")
 ```
 
 
 This vignette is profiling the frequency of drugs in the `Drug Exposures` Table based on RxNorm Ingredient and ATC Class.  The `Drug Exposures` table is joined to the `Concept Ancestor` and `Concept` tables to derive the RxNorm Ingredients as well as the ATC 2nd Concept Class that the drug records belong to.  
 
-```{r,results='hide',warning=FALSE}
+```{r query,results='hide',warning=FALSE}
 staging_table <-
   pg13::write_staging_table(conn = conn, 
                             schema = "patelm9",
@@ -99,7 +99,7 @@ pg13::drop_all_staging_tables(conn = conn,
                               schema = "patelm9")
 ```
 
-```{r,include=FALSE}
+```{r prep,include=FALSE}
 output2 <-
   output %>%
     dplyr::group_by(ingredient) %>%
@@ -114,7 +114,7 @@ output2
 \newpage
 \blandscape
 
-```{r,echo=FALSE}
+```{r plot,echo=FALSE}
 output2 %>%
   ggplot2::ggplot(aes(x = ingredient, 
                       y = concept_count,
@@ -143,7 +143,7 @@ output2 %>%
 
 \elandscape
 
-```{r,include=FALSE,results='hide'}
+```{r disconnection,include=FALSE,results='hide'}
 pg13::dc(conn = conn)
 ```
 
